@@ -1,0 +1,696 @@
+body {
+  margin: 0;
+  font-family: Inter, "Segoe UI", Arial, sans-serif;
+  background: #eef3f7;
+  color: #172033;
+}
+
+.container {
+  width: 100%;
+  padding: 30px 20px 48px;
+  box-sizing: border-box;
+}
+
+.card {
+  background: #fff;
+  padding: 20px;
+  margin-bottom: 16px;
+  border-radius: 16px;
+  border: 1px solid #d8e2ef;
+  box-shadow: 0 10px 26px rgba(46, 64, 86, 0.08);
+  display: grid;
+  gap: 12px;
+}
+
+.hero {
+  background: linear-gradient(120deg, #0099ff 0%, #2f80ed 70%, #4aa3ff 100%);
+  color: #fff;
+}
+
+.hero-top {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 20px;
+}
+
+.hero-intro {
+  flex: 1;
+  min-width: 240px;
+}
+
+.hero-auth {
+  flex-shrink: 0;
+}
+
+.hero h1 {
+  margin: 0;
+  font-size: 34px;
+  letter-spacing: 0.2px;
+}
+
+.hero p {
+  margin: 0;
+  color: rgba(255, 255, 255, 0.95);
+  font-size: 16px;
+}
+
+.google-signin-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 22px;
+  background: #fff;
+  color: #1f1f1f;
+  border: 1px solid #747775;
+  border-radius: 9999px;
+  font-weight: 500;
+  font-size: 14px;
+  font-family: Roboto, "Google Sans", "Segoe UI", Arial, sans-serif;
+  box-shadow: 0 1px 2px rgba(60, 64, 67, 0.15);
+  transform: none;
+}
+
+.google-signin-btn:hover {
+  background: #f8f9fa;
+  box-shadow: 0 1px 3px rgba(60, 64, 67, 0.22);
+  transform: none;
+}
+
+.google-signin-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.google-user-chip {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 8px;
+  text-align: right;
+}
+
+.google-user-email {
+  font-size: 14px;
+  font-weight: 500;
+  color: #fff;
+  max-width: 260px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.google-user-role {
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.85);
+}
+
+.google-outline-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px 18px;
+  background: transparent;
+  color: #fff;
+  border: 1px solid rgba(255, 255, 255, 0.85);
+  border-radius: 9999px;
+  font-weight: 500;
+  font-size: 13px;
+  transform: none;
+}
+
+.google-outline-btn:hover {
+  background: rgba(255, 255, 255, 0.12);
+  transform: none;
+}
+
+.google-outline-btn--danger-text {
+  border-color: rgba(255, 200, 200, 0.75);
+  color: #ffebee;
+  font-size: 12px;
+  padding: 6px 14px;
+}
+
+.google-outline-btn--danger-text:hover {
+  background: rgba(211, 47, 47, 0.35);
+}
+
+.google-outline-btn--small {
+  padding: 8px 14px;
+  font-size: 13px;
+  color: #126bcf;
+  background: #fff;
+  border-color: #dadce0;
+}
+
+.google-outline-btn--small:hover {
+  background: #f8f9fa;
+  box-shadow: 0 1px 2px rgba(60, 64, 67, 0.12);
+}
+
+.google-primary-btn {
+  width: 100%;
+  margin-top: 8px;
+  padding: 11px 24px;
+  background: #0b57d0;
+  color: #fff;
+  border-radius: 9999px;
+  font-weight: 500;
+  font-size: 14px;
+  font-family: Roboto, "Google Sans", "Segoe UI", Arial, sans-serif;
+  border: none;
+  transform: none;
+}
+
+.google-primary-btn:hover {
+  background: #0842a0;
+  box-shadow: 0 1px 3px rgba(11, 87, 208, 0.35);
+  transform: none;
+}
+
+.auth-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  background: rgba(32, 33, 36, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  box-sizing: border-box;
+}
+
+.auth-modal {
+  width: 100%;
+  max-width: 400px;
+  background: #fff;
+  border-radius: 28px;
+  padding: 28px 28px 24px;
+  box-shadow: 0 8px 28px rgba(32, 33, 36, 0.28);
+  box-sizing: border-box;
+}
+
+.auth-modal-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.auth-modal-title {
+  margin: 0;
+  font-size: 24px;
+  font-weight: 400;
+  color: #1f1f1f;
+  font-family: "Google Sans", Roboto, "Segoe UI", Arial, sans-serif;
+}
+
+.auth-modal-close {
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  border-radius: 50%;
+  background: transparent;
+  color: #444746;
+  border: none;
+  font-size: 28px;
+  line-height: 1;
+  font-weight: 300;
+  transform: none;
+}
+
+.auth-modal-close:hover {
+  background: #f2f2f2;
+  transform: none;
+}
+
+.auth-modal-subtitle {
+  margin: 8px 0 20px;
+  font-size: 14px;
+  color: #444746;
+}
+
+.auth-modal-tabs {
+  display: flex;
+  gap: 4px;
+  padding: 4px;
+  background: #f0f4f9;
+  border-radius: 9999px;
+  margin-bottom: 20px;
+}
+
+.auth-modal-tab {
+  flex: 1;
+  padding: 10px 12px;
+  border-radius: 9999px;
+  border: none;
+  background: transparent;
+  color: #444746;
+  font-weight: 500;
+  font-size: 14px;
+  transform: none;
+}
+
+.auth-modal-tab:hover {
+  background: rgba(255, 255, 255, 0.7);
+  transform: none;
+}
+
+.auth-modal-tab.is-active {
+  background: #fff;
+  color: #0b57d0;
+  box-shadow: 0 1px 2px rgba(60, 64, 67, 0.12);
+}
+
+.auth-modal-form {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.auth-modal-form .google-outline-btn {
+  margin-top: 10px;
+}
+
+.auth-code-input {
+  font-size: 22px;
+  letter-spacing: 0.35em;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+}
+
+.auth-field-label {
+  font-size: 14px;
+  font-weight: 500;
+  color: #1f1f1f;
+  margin-top: 12px;
+}
+
+.auth-field-label:first-of-type {
+  margin-top: 0;
+}
+
+.auth-field-input {
+  margin-top: 6px;
+  padding: 13px 16px;
+  border-radius: 4px;
+  border: 1px solid #747775;
+  font-size: 16px;
+  background: #fff;
+  color: #1f1f1f;
+}
+
+.auth-field-input:focus {
+  border-color: #0b57d0;
+  box-shadow: 0 0 0 1px #0b57d0;
+}
+
+.spot-section-hint {
+  margin: 0 0 12px;
+}
+
+.lot-card {
+  border: 1px solid #e0ecf9;
+  border-radius: 14px;
+  padding: 16px;
+  margin-bottom: 14px;
+  background: #fafdff;
+}
+
+.lot-card-main {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 14px;
+}
+
+.lot-card-text {
+  flex: 1;
+  min-width: 220px;
+}
+
+.lot-card-address {
+  display: block;
+  font-size: 15px;
+  color: #172033;
+  margin-bottom: 6px;
+  line-height: 1.35;
+}
+
+.lot-booking {
+  flex-shrink: 0;
+}
+
+.lot-manage-details {
+  margin-top: 14px;
+  padding-top: 12px;
+  border-top: 1px solid #e8eef7;
+}
+
+.lot-manage-details summary {
+  cursor: pointer;
+  font-weight: 600;
+  color: #214165;
+  user-select: none;
+}
+
+.lot-spot-list {
+  margin-top: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.spot-row--compact {
+  margin-top: 0;
+  padding: 10px;
+}
+
+.booking-line {
+  line-height: 1.45;
+}
+
+.spot-booking {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.spot-booking-label {
+  font-size: 13px;
+  font-weight: 600;
+  color: #214165;
+}
+
+.spot-actions {
+  justify-content: flex-end;
+}
+
+.select-input--compact {
+  min-width: 120px;
+  padding: 8px 10px;
+  font-size: 14px;
+}
+
+.brand-badge {
+  display: inline-flex;
+  width: fit-content;
+  padding: 6px 10px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.22);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  font-weight: 700;
+  font-size: 12px;
+  letter-spacing: 0.6px;
+}
+
+input,
+button {
+  padding: 11px 13px;
+  border-radius: 12px;
+  font-size: 15px;
+}
+
+input {
+  border: 1px solid #c7d5e8;
+  outline: none;
+  background: #f8fbff;
+}
+
+input:focus {
+  border-color: #2f80ed;
+  box-shadow: 0 0 0 4px rgba(47, 128, 237, 0.16);
+}
+
+button {
+  border: none;
+  background: #ff6b00;
+  color: #fff;
+  cursor: pointer;
+  font-weight: 700;
+  transition: 0.18s ease;
+}
+
+button:hover {
+  background: #e25f00;
+  transform: translateY(-1px);
+}
+
+.secondary-btn {
+  background: #edf6ff;
+  color: #126bcf;
+  border: 1px solid #bfdbfe;
+}
+
+.danger-btn {
+  background: #d32f2f;
+}
+
+.danger-btn:hover {
+  background: #b71c1c;
+}
+
+.danger-btn--full {
+  width: 100%;
+  margin-top: 8px;
+}
+
+.auth-modal--danger {
+  border: 1px solid #ffcdd2;
+  box-shadow: 0 8px 32px rgba(183, 28, 28, 0.12);
+}
+
+.row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  border-top: 1px solid #edf2f8;
+  padding-top: 12px;
+}
+
+.spot-row {
+  background: #f9fcff;
+  border: 1px solid #e0ecf9;
+  border-radius: 12px;
+  padding: 12px;
+  border-top: 1px solid #e0ecf9;
+}
+
+.spot-row + .spot-row {
+  margin-top: 10px;
+}
+
+.section-card h2 {
+  margin: 0 0 6px;
+  color: #214165;
+}
+
+.spot-row {
+  flex-wrap: wrap;
+}
+
+.actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.spot-info {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.muted {
+  color: #5b6f89;
+  font-size: 13px;
+}
+
+.message {
+  margin: 0 0 16px;
+  padding: 11px 13px;
+  background: #f0f9ff;
+  border: 1px solid #bae0ff;
+  border-radius: 12px;
+  color: #0f5fa8;
+  font-weight: 500;
+}
+
+.user-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.price-pill {
+  width: fit-content;
+  font-size: 12px;
+  color: #0d5cb6;
+  background: #e9f3ff;
+  border: 1px solid #c6defa;
+  border-radius: 999px;
+  padding: 4px 10px;
+  font-weight: 600;
+}
+
+.auth-tabs {
+  display: flex;
+  gap: 8px;
+}
+
+.management-form {
+  display: grid;
+  gap: 10px;
+}
+
+.map-container {
+  width: 100%;
+  height: 640px;
+  border-radius: 12px;
+  overflow: hidden;
+  border: 1px solid #d8e2ef;
+  background: #fff;
+}
+
+.select-input {
+  padding: 11px 13px;
+  border-radius: 12px;
+  font-size: 15px;
+  border: 1px solid #c7d5e8;
+  background: #f8fbff;
+  color: #172033;
+  min-width: 160px;
+  cursor: pointer;
+}
+
+.select-input:focus {
+  outline: none;
+  border-color: #2f80ed;
+  box-shadow: 0 0 0 4px rgba(47, 128, 237, 0.16);
+}
+
+.admin-users-hint {
+  margin-bottom: 16px;
+  max-width: 720px;
+}
+
+.admin-users-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.admin-user-card {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 6px;
+  padding: 14px 16px;
+  text-align: left;
+  border-radius: 12px;
+  border: 1px solid #d8e2ef;
+  background: #f9fcff;
+  cursor: pointer;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+  font: inherit;
+  color: inherit;
+}
+
+.admin-user-card:hover {
+  border-color: #2f80ed;
+  box-shadow: 0 2px 12px rgba(47, 128, 237, 0.12);
+}
+
+.admin-user-card.is-selected {
+  border-color: #126bcf;
+  background: #eef5ff;
+  box-shadow: 0 0 0 2px rgba(18, 107, 207, 0.2);
+}
+
+.admin-user-card-email {
+  font-weight: 600;
+  font-size: 14px;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.admin-user-card-meta {
+  font-size: 13px;
+  color: #3d4f6b;
+}
+
+.admin-user-card-badge {
+  font-size: 11px;
+  font-weight: 600;
+  padding: 3px 8px;
+  border-radius: 999px;
+  width: fit-content;
+}
+
+.admin-user-card-badge.is-verified {
+  background: #e6f4ea;
+  color: #137333;
+}
+
+.admin-user-card-badge.is-pending {
+  background: #fef7e0;
+  color: #b06000;
+}
+
+.admin-user-card-date {
+  font-size: 12px;
+}
+
+.admin-user-bookings-panel {
+  margin-top: 8px;
+  padding-top: 16px;
+  border-top: 1px solid #e0ecf9;
+}
+
+.admin-user-bookings-title {
+  font-size: 17px;
+  margin: 0 0 12px;
+}
+
+.admin-booking-row {
+  background: #fff;
+  border: 1px solid #e0ecf9;
+  border-radius: 10px;
+  padding: 10px 12px;
+  margin-bottom: 8px;
+}
+
+@media (max-width: 640px) {
+  .hero h1 {
+    font-size: 26px;
+  }
+
+  .user-card {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .google-user-chip {
+    align-items: flex-start;
+    text-align: left;
+  }
+
+  .spot-booking {
+    width: 100%;
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .spot-booking .select-input--compact {
+    width: 100%;
+  }
+}

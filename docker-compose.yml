@@ -1,0 +1,55 @@
+services:
+  db:
+    image: postgres:16
+    container_name: parking_db
+    environment:
+      POSTGRES_DB: parking
+      POSTGRES_USER: parking
+      POSTGRES_PASSWORD: parking
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U parking -d parking"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  backend:
+    build:
+      context: ./backend
+    container_name: parking_backend
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgresql://parking:parking@db:5432/parking?schema=public
+      JWT_SECRET: super-secret-key
+      JWT_EXPIRES_IN: 7d
+      PORT: 3000
+      NODE_ENV: production
+      # SMTP: задайте переменные в .env в корне проекта — иначе код подтверждения только в логах backend
+      SMTP_HOST: ${SMTP_HOST:-}
+      SMTP_PORT: ${SMTP_PORT:-587}
+      SMTP_SECURE: ${SMTP_SECURE:-false}
+      SMTP_USER: ${SMTP_USER:-}
+      SMTP_PASS: ${SMTP_PASS:-}
+      SMTP_FROM: ${SMTP_FROM:-noreply@parking.local}
+    ports:
+      - "3000:3000"
+    command: sh -c "npx prisma db push && npm run seed && node dist/src/server.js"
+
+  frontend:
+    build:
+      context: ./frontend
+    container_name: parking_frontend
+    depends_on:
+      - backend
+    environment:
+      VITE_API_URL: http://localhost:3000/api
+    ports:
+      - "5173:80"
+
+volumes:
+  pgdata:

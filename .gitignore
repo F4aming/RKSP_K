@@ -1,0 +1,13 @@
+node_modules/
+dist/
+build/
+.env
+.env.*
+coverage/
+*.log
+pnpm-lock.yaml
+package-lock.json
+/.idea
+/.vscode
+backend/prisma/dev.db
+backend/prisma/dev.db-journal

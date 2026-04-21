@@ -1,0 +1,60 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  DRIVER
+  OPERATOR
+  ADMIN
+}
+
+enum BookingStatus {
+  ACTIVE
+  CANCELLED
+}
+
+model User {
+  id                 String             @id @default(uuid())
+  email              String             @unique
+  passwordHash       String
+  role               Role               @default(DRIVER)
+  emailVerifiedAt    DateTime?
+  bookings           Booking[]
+  emailVerification  EmailVerification?
+  createdAt          DateTime           @default(now())
+}
+
+model EmailVerification {
+  id        String   @id @default(uuid())
+  userId    String   @unique
+  codeHash  String
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model ParkingSpot {
+  id           String    @id @default(uuid())
+  code         String    @unique
+  location     String
+  pricePerHour Decimal   @db.Decimal(10, 2)
+  isActive     Boolean   @default(true)
+  bookings     Booking[]
+}
+
+model Booking {
+  id        String        @id @default(uuid())
+  userId    String
+  spotId    String
+  startTime DateTime
+  endTime   DateTime
+  status    BookingStatus @default(ACTIVE)
+  user      User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  spot      ParkingSpot   @relation(fields: [spotId], references: [id], onDelete: Cascade)
+  createdAt DateTime      @default(now())
+}
