@@ -13,7 +13,11 @@ vi.mock("../src/services/email.js", () => ({
 }));
 
 import { buildApp } from "../src/app.js";
-import type { FastifyInstance } from "fastify";
+import type { FastifyInstance, InjectOptions } from "fastify";
+
+function asPayload(body: unknown): InjectOptions["payload"] {
+  return body as InjectOptions["payload"];
+}
 
 function assertNoCrash(statusCode: number) {
   expect(statusCode).toBeGreaterThanOrEqual(200);
@@ -48,7 +52,7 @@ describe("fuzz: HTTP API", () => {
   test("POST /api/auth/register — случайные тела", async () => {
     await fc.assert(
       fc.asyncProperty(jsonBodyArb(), async (body) => {
-        const res = await app.inject({ method: "POST", url: "/api/auth/register", payload: body });
+        const res = await app.inject({ method: "POST", url: "/api/auth/register", payload: asPayload(body) });
         assertNoCrash(res.statusCode);
       }),
       { numRuns: 200 }
@@ -58,7 +62,7 @@ describe("fuzz: HTTP API", () => {
   test("POST /api/auth/login — случайные тела", async () => {
     await fc.assert(
       fc.asyncProperty(jsonBodyArb(), async (body) => {
-        const res = await app.inject({ method: "POST", url: "/api/auth/login", payload: body });
+        const res = await app.inject({ method: "POST", url: "/api/auth/login", payload: asPayload(body) });
         assertNoCrash(res.statusCode);
       }),
       { numRuns: 200 }
@@ -68,7 +72,7 @@ describe("fuzz: HTTP API", () => {
   test("POST /api/auth/verify-email — случайные тела", async () => {
     await fc.assert(
       fc.asyncProperty(jsonBodyArb(), async (body) => {
-        const res = await app.inject({ method: "POST", url: "/api/auth/verify-email", payload: body });
+        const res = await app.inject({ method: "POST", url: "/api/auth/verify-email", payload: asPayload(body) });
         assertNoCrash(res.statusCode);
       }),
       { numRuns: 200 }
@@ -81,7 +85,7 @@ describe("fuzz: HTTP API", () => {
         const res = await app.inject({
           method: "POST",
           url: "/api/auth/resend-verification",
-          payload: body
+          payload: asPayload(body)
         });
         assertNoCrash(res.statusCode);
       }),
@@ -116,7 +120,7 @@ describe("fuzz: HTTP API", () => {
         const res = await app.inject({
           method: "POST",
           url: "/api/bookings",
-          payload: body,
+          payload: asPayload(body),
           headers
         });
         assertNoCrash(res.statusCode);
@@ -158,7 +162,7 @@ describe("fuzz: HTTP API", () => {
         const res = await app.inject({
           method: "POST",
           url: "/api/parking-spots",
-          payload: body,
+          payload: asPayload(body),
           headers: { authorization: `Bearer ${adminToken}` }
         });
         assertNoCrash(res.statusCode);
