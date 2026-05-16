@@ -15,4 +15,4 @@ COPY --from=builder /app/node_modules ./node_modules
 COPY --from=builder /app/prisma ./prisma
 COPY --from=builder /app/dist ./dist
 EXPOSE 3000
-CMD ["node", "dist/src/server.js"]
+CMD ["sh", "-c", "npx prisma db push && npm run seed && node dist/src/server.js"]
