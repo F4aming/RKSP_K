@@ -1,19 +1,8 @@
 import { BookingStatus, Role } from "@prisma/client";
 import { FastifyInstance } from "fastify";
-import { z } from "zod";
 import { verifyAuth, verifyRole } from "../plugins/auth.js";
 import { prisma } from "../plugins/prisma.js";
-
-const bookingSchema = z
-  .object({
-    spotId: z.string().uuid().optional(),
-    location: z.string().min(2).optional(),
-    startTime: z.string().datetime(),
-    endTime: z.string().datetime()
-  })
-  .refine((data) => Boolean(data.spotId) !== Boolean(data.location), {
-    message: "Укажите ровно одно из полей: spotId или location"
-  });
+import { bookingSchema, uuidParamSchema } from "../validation/schemas.js";
 
 function pickRandom<T>(items: T[]): T | undefined {
   if (items.length === 0) return undefined;
@@ -100,7 +89,7 @@ export async function bookingRoutes(app: FastifyInstance) {
   });
 
   app.patch("/bookings/:id/cancel", { preHandler: verifyAuth }, async (request, reply) => {
-    const params = z.object({ id: z.string().uuid() }).safeParse(request.params);
+    const params = uuidParamSchema.safeParse(request.params);
     if (!params.success) {
       return reply.status(400).send({ message: "Validation error" });
     }

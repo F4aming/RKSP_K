@@ -2,36 +2,15 @@ import { FastifyInstance } from "fastify";
 import bcrypt from "bcryptjs";
 import { prisma } from "../plugins/prisma.js";
 import { Role } from "@prisma/client";
-import { z } from "zod";
 import { verifyAuth } from "../plugins/auth.js";
 import { issueVerificationCode, verifyEmailCode } from "../services/email-verification.js";
-
-/** Допускает любой непустой локальный ящик и домен с @ (без жёстких правил Zod email). */
-const looseEmailSchema = z
-  .string()
-  .trim()
-  .min(1, "Укажите почту")
-  .max(320)
-  .refine((s) => {
-    const at = s.indexOf("@");
-    if (at <= 0 || at === s.length - 1) return false;
-    const local = s.slice(0, at);
-    const domain = s.slice(at + 1);
-    return local.length > 0 && domain.length > 0 && !local.includes(" ") && !domain.includes(" ");
-  }, "Формат: что-то@домен");
-
-const registerSchema = z.object({
-  email: looseEmailSchema,
-  password: z.string().min(1, "Пароль не может быть пустым").max(256)
-});
-
-const verifyEmailSchema = z.object({
-  email: looseEmailSchema,
-  code: z
-    .string()
-    .trim()
-    .regex(/^\d{6}$/, "Код из 6 цифр, как в письме")
-});
+import {
+  deleteAccountSchema,
+  loginSchema,
+  registerSchema,
+  resendVerificationSchema,
+  verifyEmailSchema
+} from "../validation/schemas.js";
 
 function normalizeEmail(email: string): string {
   return email.trim().toLowerCase();
@@ -128,7 +107,7 @@ export async function authRoutes(app: FastifyInstance) {
   });
 
   app.post("/auth/resend-verification", async (request, reply) => {
-    const parsed = z.object({ email: looseEmailSchema }).safeParse(request.body);
+    const parsed = resendVerificationSchema.safeParse(request.body);
     if (!parsed.success) {
       return reply.status(400).send({ message: "Ошибка валидации", issues: parsed.error.issues });
     }
@@ -158,12 +137,7 @@ export async function authRoutes(app: FastifyInstance) {
   });
 
   app.post("/auth/login", async (request, reply) => {
-    const parsed = z
-      .object({
-        email: looseEmailSchema,
-        password: z.string().min(1)
-      })
-      .safeParse(request.body);
+    const parsed = loginSchema.safeParse(request.body);
     if (!parsed.success) {
       return reply.status(400).send({ message: "Ошибка валидации", issues: parsed.error.issues });
     }
@@ -223,11 +197,7 @@ export async function authRoutes(app: FastifyInstance) {
   });
 
   app.delete("/auth/account", { preHandler: verifyAuth }, async (request, reply) => {
-    const parsed = z
-      .object({
-        password: z.string().min(1, "Введите пароль для подтверждения удаления")
-      })
-      .safeParse(request.body);
+    const parsed = deleteAccountSchema.safeParse(request.body);
     if (!parsed.success) {
       return reply.status(400).send({ message: "Ошибка валидации", issues: parsed.error.issues });
     }

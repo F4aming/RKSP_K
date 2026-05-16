@@ -1,25 +1,17 @@
 import { FastifyInstance } from "fastify";
 import { BookingStatus, Role } from "@prisma/client";
-import { z } from "zod";
 import { verifyRole } from "../plugins/auth.js";
 import { prisma } from "../plugins/prisma.js";
-
-const spotSchema = z.object({
-  code: z.string().min(2),
-  location: z.string().min(2),
-  pricePerHour: z.number().positive(),
-  isActive: z.boolean().optional()
-});
+import {
+  availabilityQuerySchema,
+  parkingSpotsQuerySchema,
+  spotSchema,
+  uuidParamSchema
+} from "../validation/schemas.js";
 
 export async function parkingSpotRoutes(app: FastifyInstance) {
   app.get("/parking-availability", async (request, reply) => {
-    const parsed = z
-      .object({
-        startTime: z.string().datetime(),
-        endTime: z.string().datetime(),
-        location: z.string().optional()
-      })
-      .safeParse(request.query);
+    const parsed = availabilityQuerySchema.safeParse(request.query);
     if (!parsed.success) {
       return reply.status(400).send({ message: "Validation error", issues: parsed.error.issues });
     }
@@ -86,7 +78,7 @@ export async function parkingSpotRoutes(app: FastifyInstance) {
   });
 
   app.get("/parking-spots", async (request) => {
-    const query = z.object({ location: z.string().optional() }).safeParse(request.query);
+    const query = parkingSpotsQuerySchema.safeParse(request.query);
     const where = query.success && query.data.location ? { location: query.data.location, isActive: true } : { isActive: true };
     return prisma.parkingSpot.findMany({ where });
   });
@@ -101,7 +93,7 @@ export async function parkingSpotRoutes(app: FastifyInstance) {
   });
 
   app.patch("/parking-spots/:id", { preHandler: verifyRole([Role.ADMIN, Role.OPERATOR]) }, async (request, reply) => {
-    const params = z.object({ id: z.string().uuid() }).safeParse(request.params);
+    const params = uuidParamSchema.safeParse(request.params);
     const body = spotSchema.partial().safeParse(request.body);
     if (!params.success || !body.success) {
       return reply.status(400).send({ message: "Validation error" });
@@ -114,7 +106,7 @@ export async function parkingSpotRoutes(app: FastifyInstance) {
   });
 
   app.delete("/parking-spots/:id", { preHandler: verifyRole([Role.ADMIN]) }, async (request, reply) => {
-    const params = z.object({ id: z.string().uuid() }).safeParse(request.params);
+    const params = uuidParamSchema.safeParse(request.params);
     if (!params.success) {
       return reply.status(400).send({ message: "Validation error" });
     }

@@ -6,8 +6,8 @@ import { parkingSpotRoutes } from "./routes/parking-spots.js";
 import { bookingRoutes } from "./routes/bookings.js";
 import { adminRoutes } from "./routes/admin.js";
 
-export function buildApp() {
-  const app = Fastify({ logger: true });
+export function buildApp(options?: { logger?: boolean }) {
+  const app = Fastify({ logger: options?.logger ?? true });
 
   app.register(cors, { origin: true });
   app.register(jwt, {

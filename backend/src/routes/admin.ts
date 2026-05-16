@@ -1,8 +1,8 @@
 import { FastifyInstance } from "fastify";
-import { z } from "zod";
 import { verifyRole } from "../plugins/auth.js";
 import { prisma } from "../plugins/prisma.js";
 import { Role } from "@prisma/client";
+import { userIdParamSchema } from "../validation/schemas.js";
 
 export async function adminRoutes(app: FastifyInstance) {
   app.get("/admin/users", { preHandler: verifyRole([Role.ADMIN]) }, async () => {
@@ -28,7 +28,7 @@ export async function adminRoutes(app: FastifyInstance) {
   });
 
   app.get("/admin/users/:userId/bookings", { preHandler: verifyRole([Role.ADMIN]) }, async (request, reply) => {
-    const params = z.object({ userId: z.string().uuid() }).safeParse(request.params);
+    const params = userIdParamSchema.safeParse(request.params);
     if (!params.success) {
       return reply.status(400).send({ message: "Некорректный идентификатор пользователя" });
     }
