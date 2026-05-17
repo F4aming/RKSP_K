@@ -525,7 +525,7 @@ export function App() {
       <header className="hero card">
         <div className="hero-top">
           <div className="hero-intro">
-            <span className="brand-badge">PARKING • AVIA STYLE</span>
+            <span className="brand-badge">PARKING</span>
             <h1>Сервис поиска и бронирования парковок</h1>
             <p>Найдите место рядом и забронируйте его за пару кликов.</p>
           </div>
