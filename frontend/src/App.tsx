@@ -1,4 +1,5 @@
 import { FormEvent, useCallback, useEffect, useMemo, useState } from "react";
+import { getApiBaseUrl } from "./api";
 
 type User = { id: string; email: string; role: "DRIVER" | "OPERATOR" | "ADMIN" };
 type AdminUserSummary = {
@@ -14,10 +15,8 @@ type Booking = { id: string; spotId: string; startTime: string; endTime: string;
 type LotAvailability = { location: string; totalSpots: number; freeSpots: number; pricePerHour: string };
 type AuthMode = "login" | "register" | "verify";
 
-const API_URL = import.meta.env.VITE_API_URL ?? "/api";
-
 const NETWORK_ERROR_MESSAGE =
-  "Не удалось связаться с сервером. Убедитесь, что backend запущен и сайт открыт через тот же публичный адрес (для CloudPub — пробросьте порт frontend, например 5173).";
+  "Не удалось связаться с сервером. Откройте сайт по публичной ссылке CloudPub (не localhost) и пробросьте порт 5173 (frontend).";
 const roleLabel: Record<User["role"], string> = {
   DRIVER: "Водитель",
   OPERATOR: "Оператор",
@@ -49,6 +48,7 @@ function groupSpotsByLocation(spots: Spot[]): Record<string, Spot[]> {
 }
 
 export function App() {
+  const apiUrl = useMemo(() => getApiBaseUrl(), []);
   const [authMode, setAuthMode] = useState<AuthMode>("login");
   const [token, setToken] = useState<string>(localStorage.getItem("token") ?? "");
   const [user, setUser] = useState<User | null>(null);
@@ -100,7 +100,7 @@ export function App() {
   const logout = useCallback(async () => {
     if (token) {
       try {
-        await fetch(`${API_URL}/auth/logout`, {
+        await fetch(`${apiUrl}/auth/logout`, {
           method: "POST",
           headers: { Authorization: `Bearer ${token}` }
         });
@@ -136,7 +136,7 @@ export function App() {
     setAuthSubmitting(true);
     setMessage("");
     try {
-      const res = await fetch(`${API_URL}/auth/login`, {
+      const res = await fetch(`${apiUrl}/auth/login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, password })
@@ -185,7 +185,7 @@ export function App() {
     setAuthSubmitting(true);
     setMessage("");
     try {
-      const res = await fetch(`${API_URL}/auth/register`, {
+      const res = await fetch(`${apiUrl}/auth/register`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, password })
@@ -235,7 +235,7 @@ export function App() {
     setAuthSubmitting(true);
     setMessage("");
     try {
-      const res = await fetch(`${API_URL}/auth/verify-email`, {
+      const res = await fetch(`${apiUrl}/auth/verify-email`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, code })
@@ -271,7 +271,7 @@ export function App() {
 
   async function deleteAccount(event: FormEvent) {
     event.preventDefault();
-    const res = await fetch(`${API_URL}/auth/account`, {
+    const res = await fetch(`${apiUrl}/auth/account`, {
       method: "DELETE",
       headers: jsonAuthHeaders,
       body: JSON.stringify({ password: deleteAccountPassword })
@@ -298,20 +298,27 @@ export function App() {
   }
 
   async function resendVerificationCode() {
-    const res = await fetch(`${API_URL}/auth/resend-verification`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email })
-    });
-    const data = (await res.json().catch(() => ({}))) as {
-      message?: string;
-      retryAfterSec?: number;
-    };
-    if (res.status === 429 && typeof data.retryAfterSec === "number") {
-      setMessage(`Подождите ${data.retryAfterSec} с. перед повторной отправкой.`);
-      return;
+    setAuthSubmitting(true);
+    try {
+      const res = await fetch(`${apiUrl}/auth/resend-verification`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email })
+      });
+      const data = (await res.json().catch(() => ({}))) as {
+        message?: string;
+        retryAfterSec?: number;
+      };
+      if (res.status === 429 && typeof data.retryAfterSec === "number") {
+        setMessage(`Подождите ${data.retryAfterSec} с. перед повторной отправкой.`);
+        return;
+      }
+      setMessage(data.message ?? "Запрос обработан.");
+    } catch {
+      setMessage(NETWORK_ERROR_MESSAGE);
+    } finally {
+      setAuthSubmitting(false);
     }
-    setMessage(data.message ?? "Запрос обработан.");
   }
 
   async function loadProfile() {
@@ -319,7 +326,7 @@ export function App() {
       setUser(null);
       return;
     }
-    const res = await fetch(`${API_URL}/auth/me`, { headers: authHeaders });
+    const res = await fetch(`${apiUrl}/auth/me`, { headers: authHeaders });
     if (isUnauthorized(res)) {
       clearSession("Сессия истекла. Войдите снова.");
       return;
@@ -334,14 +341,18 @@ export function App() {
   }
 
   async function loadSpots() {
-    const res = await fetch(`${API_URL}/parking-spots`);
-    const data = await res.json();
-    setSpots(data);
+    try {
+      const res = await fetch(`${apiUrl}/parking-spots`);
+      if (!res.ok) return;
+      setSpots(await res.json());
+    } catch {
+      /* сеть недоступна — не падаем в консоль */
+    }
   }
 
   async function loadBookings() {
     if (!token) return;
-    const res = await fetch(`${API_URL}/bookings`, { headers: authHeaders });
+    const res = await fetch(`${apiUrl}/bookings`, { headers: authHeaders });
     if (isUnauthorized(res)) {
       clearSession("Требуется повторный вход.");
       return;
@@ -353,7 +364,7 @@ export function App() {
 
   const loadAdminUsers = useCallback(async () => {
     if (!token || user?.role !== "ADMIN") return;
-    const res = await fetch(`${API_URL}/admin/users`, { headers: authHeaders });
+    const res = await fetch(`${apiUrl}/admin/users`, { headers: authHeaders });
     if (isUnauthorized(res)) {
       clearSession("Требуется повторный вход.");
       return;
@@ -366,7 +377,7 @@ export function App() {
   const loadAdminUserBookingsFor = useCallback(
     async (userId: string) => {
       if (!token || user?.role !== "ADMIN") return;
-      const res = await fetch(`${API_URL}/admin/users/${userId}/bookings`, { headers: authHeaders });
+      const res = await fetch(`${apiUrl}/admin/users/${userId}/bookings`, { headers: authHeaders });
       if (isUnauthorized(res)) {
         clearSession("Требуется повторный вход.");
         return;
@@ -398,7 +409,7 @@ export function App() {
           endTime: end.toISOString(),
           location: loc
         });
-        const res = await fetch(`${API_URL}/parking-availability?${params}`);
+        const res = await fetch(`${apiUrl}/parking-availability?${params}`);
         if (!res.ok) return;
         const row = (await res.json()) as LotAvailability;
         next[loc] = row;
@@ -411,7 +422,7 @@ export function App() {
     const hours = Math.max(1, durationByLocation[location] ?? 1);
     const now = new Date();
     const end = new Date(now.getTime() + hours * 60 * 60 * 1000);
-    const res = await fetch(`${API_URL}/bookings`, {
+    const res = await fetch(`${apiUrl}/bookings`, {
       method: "POST",
       headers: jsonAuthHeaders,
       body: JSON.stringify({ location, startTime: now.toISOString(), endTime: end.toISOString() })
@@ -438,7 +449,7 @@ export function App() {
   }
 
   async function cancelBooking(bookingId: string) {
-    const res = await fetch(`${API_URL}/bookings/${bookingId}/cancel`, {
+    const res = await fetch(`${apiUrl}/bookings/${bookingId}/cancel`, {
       method: "PATCH",
       headers: authHeaders
     });
@@ -467,7 +478,7 @@ export function App() {
     if (!canManageSpots) return;
     const payload = { code: spotCode, location: spotLocation, pricePerHour: Number(spotPrice) };
     const method = editingSpotId ? "PATCH" : "POST";
-    const url = editingSpotId ? `${API_URL}/parking-spots/${editingSpotId}` : `${API_URL}/parking-spots`;
+    const url = editingSpotId ? `${apiUrl}/parking-spots/${editingSpotId}` : `${apiUrl}/parking-spots`;
     const res = await fetch(url, { method, headers: jsonAuthHeaders, body: JSON.stringify(payload) });
     if (isUnauthorized(res)) {
       clearSession("Сессия истекла. Войдите снова.");
@@ -490,7 +501,7 @@ export function App() {
 
   async function deleteSpot(spotId: string) {
     if (!canDeleteSpots) return;
-    const res = await fetch(`${API_URL}/parking-spots/${spotId}`, { method: "DELETE", headers: authHeaders });
+    const res = await fetch(`${apiUrl}/parking-spots/${spotId}`, { method: "DELETE", headers: authHeaders });
     if (isUnauthorized(res)) {
       clearSession("Сессия истекла. Войдите снова.");
       return;
