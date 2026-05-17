@@ -17,10 +17,15 @@ export async function sendTransactionalEmail(to: string, subject: string, text: 
         : undefined
   });
 
-  await transporter.sendMail({
-    from: process.env.SMTP_FROM ?? "noreply@parking.local",
-    to,
-    subject,
-    text
-  });
+  try {
+    await transporter.sendMail({
+      from: process.env.SMTP_FROM ?? "noreply@parking.local",
+      to,
+      subject,
+      text
+    });
+  } catch (err) {
+    console.error("[email] SMTP send failed:", err);
+    console.info(`[email:fallback] to=${to}\nSubject: ${subject}\n\n${text}`);
+  }
 }

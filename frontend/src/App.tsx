@@ -14,7 +14,10 @@ type Booking = { id: string; spotId: string; startTime: string; endTime: string;
 type LotAvailability = { location: string; totalSpots: number; freeSpots: number; pricePerHour: string };
 type AuthMode = "login" | "register" | "verify";
 
-const API_URL = import.meta.env.VITE_API_URL ?? "http://localhost:3000/api";
+const API_URL = import.meta.env.VITE_API_URL ?? "/api";
+
+const NETWORK_ERROR_MESSAGE =
+  "Не удалось связаться с сервером. Убедитесь, что backend запущен и сайт открыт через тот же публичный адрес (для CloudPub — пробросьте порт frontend, например 5173).";
 const roleLabel: Record<User["role"], string> = {
   DRIVER: "Водитель",
   OPERATOR: "Оператор",
@@ -56,6 +59,7 @@ export function App() {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [verifyCode, setVerifyCode] = useState("");
   const [message, setMessage] = useState("");
+  const [authSubmitting, setAuthSubmitting] = useState(false);
   const [spotCode, setSpotCode] = useState("");
   const [spotLocation, setSpotLocation] = useState("");
   const [spotPrice, setSpotPrice] = useState("100");
@@ -129,39 +133,47 @@ export function App() {
 
   async function login(event: FormEvent) {
     event.preventDefault();
-    const res = await fetch(`${API_URL}/auth/login`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email, password })
-    });
-    const data = (await res.json().catch(() => ({}))) as {
-      token?: string;
-      user?: User;
-      message?: string;
-      code?: string;
-      email?: string;
-      issues?: { message?: string }[];
-    };
-    if (!res.ok) {
-      const issues = data.issues;
-      if (res.status === 403 && data.code === "EMAIL_NOT_VERIFIED") {
-        setAuthMode("verify");
-        setAuthModalOpen(true);
-        if (typeof data.email === "string" && data.email.length > 0) setEmail(data.email);
+    setAuthSubmitting(true);
+    setMessage("");
+    try {
+      const res = await fetch(`${API_URL}/auth/login`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password })
+      });
+      const data = (await res.json().catch(() => ({}))) as {
+        token?: string;
+        user?: User;
+        message?: string;
+        code?: string;
+        email?: string;
+        issues?: { message?: string }[];
+      };
+      if (!res.ok) {
+        const issues = data.issues;
+        if (res.status === 403 && data.code === "EMAIL_NOT_VERIFIED") {
+          setAuthMode("verify");
+          setAuthModalOpen(true);
+          if (typeof data.email === "string" && data.email.length > 0) setEmail(data.email);
+        }
+        setMessage(issues?.[0]?.message ?? data.message ?? "Ошибка входа");
+        return;
       }
-      setMessage(issues?.[0]?.message ?? data.message ?? "Ошибка входа");
-      return;
+      if (!data.token || !data.user) {
+        setMessage("Некорректный ответ сервера");
+        return;
+      }
+      localStorage.setItem("token", data.token);
+      setToken(data.token);
+      setUser(data.user);
+      setAuthModalOpen(false);
+      setVerifyCode("");
+      setMessage("Вы успешно вошли в систему");
+    } catch {
+      setMessage(NETWORK_ERROR_MESSAGE);
+    } finally {
+      setAuthSubmitting(false);
     }
-    if (!data.token || !data.user) {
-      setMessage("Некорректный ответ сервера");
-      return;
-    }
-    localStorage.setItem("token", data.token);
-    setToken(data.token);
-    setUser(data.user);
-    setAuthModalOpen(false);
-    setVerifyCode("");
-    setMessage("Вы успешно вошли в систему");
   }
 
   async function register(event: FormEvent) {
@@ -170,38 +182,46 @@ export function App() {
       setMessage("Пароли не совпадают");
       return;
     }
-    const res = await fetch(`${API_URL}/auth/register`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email, password })
-    });
-    const data = (await res.json().catch(() => ({}))) as {
-      needsVerification?: boolean;
-      token?: string;
-      user?: User;
-      message?: string;
-      issues?: { message?: string }[];
-    };
-    if (!res.ok) {
-      const issues = data.issues;
-      setMessage(issues?.[0]?.message ?? data.message ?? "Ошибка регистрации");
-      return;
-    }
-    if (data.needsVerification) {
-      setAuthMode("verify");
-      setVerifyCode("");
-      setPassword("");
-      setConfirmPassword("");
-      setMessage(data.message ?? "Введите 6-значный код из письма.");
-      return;
-    }
-    if (data.token && data.user) {
-      localStorage.setItem("token", data.token);
-      setToken(data.token);
-      setUser(data.user);
-      setConfirmPassword("");
-      setAuthModalOpen(false);
-      setMessage("Регистрация выполнена. Вы вошли как водитель.");
+    setAuthSubmitting(true);
+    setMessage("");
+    try {
+      const res = await fetch(`${API_URL}/auth/register`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password })
+      });
+      const data = (await res.json().catch(() => ({}))) as {
+        needsVerification?: boolean;
+        token?: string;
+        user?: User;
+        message?: string;
+        issues?: { message?: string }[];
+      };
+      if (!res.ok) {
+        const issues = data.issues;
+        setMessage(issues?.[0]?.message ?? data.message ?? "Ошибка регистрации");
+        return;
+      }
+      if (data.needsVerification) {
+        setAuthMode("verify");
+        setVerifyCode("");
+        setPassword("");
+        setConfirmPassword("");
+        setMessage(data.message ?? "Введите 6-значный код из письма.");
+        return;
+      }
+      if (data.token && data.user) {
+        localStorage.setItem("token", data.token);
+        setToken(data.token);
+        setUser(data.user);
+        setConfirmPassword("");
+        setAuthModalOpen(false);
+        setMessage("Регистрация выполнена. Вы вошли как водитель.");
+      }
+    } catch {
+      setMessage(NETWORK_ERROR_MESSAGE);
+    } finally {
+      setAuthSubmitting(false);
     }
   }
 
@@ -212,33 +232,41 @@ export function App() {
       setMessage("Введите все 6 цифр кода");
       return;
     }
-    const res = await fetch(`${API_URL}/auth/verify-email`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email, code })
-    });
-    const data = (await res.json().catch(() => ({}))) as {
-      token?: string;
-      user?: User;
-      message?: string;
-      issues?: { message?: string }[];
-    };
-    if (!res.ok) {
-      const issues = data.issues;
-      setMessage(issues?.[0]?.message ?? data.message ?? "Не удалось подтвердить почту");
-      return;
+    setAuthSubmitting(true);
+    setMessage("");
+    try {
+      const res = await fetch(`${API_URL}/auth/verify-email`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, code })
+      });
+      const data = (await res.json().catch(() => ({}))) as {
+        token?: string;
+        user?: User;
+        message?: string;
+        issues?: { message?: string }[];
+      };
+      if (!res.ok) {
+        const issues = data.issues;
+        setMessage(issues?.[0]?.message ?? data.message ?? "Не удалось подтвердить почту");
+        return;
+      }
+      if (!data.token || !data.user) {
+        setMessage("Некорректный ответ сервера");
+        return;
+      }
+      localStorage.setItem("token", data.token);
+      setToken(data.token);
+      setUser(data.user);
+      setVerifyCode("");
+      setAuthModalOpen(false);
+      setAuthMode("login");
+      setMessage("Почта подтверждена. Добро пожаловать!");
+    } catch {
+      setMessage(NETWORK_ERROR_MESSAGE);
+    } finally {
+      setAuthSubmitting(false);
     }
-    if (!data.token || !data.user) {
-      setMessage("Некорректный ответ сервера");
-      return;
-    }
-    localStorage.setItem("token", data.token);
-    setToken(data.token);
-    setUser(data.user);
-    setVerifyCode("");
-    setAuthModalOpen(false);
-    setAuthMode("login");
-    setMessage("Почта подтверждена. Добро пожаловать!");
   }
 
   async function deleteAccount(event: FormEvent) {
@@ -663,6 +691,8 @@ export function App() {
                 ? "Введите 6-значный код из письма. Без настройки SMTP код виден в логах контейнера backend."
                 : "Используйте аккаунт сервиса парковок"}
             </p>
+            {message && <p className="auth-modal-message">{message}</p>}
+            {authSubmitting && <p className="auth-modal-message auth-modal-message--muted">Отправка запроса…</p>}
             {authMode !== "verify" ? (
               <div className="auth-modal-tabs">
                 <button
@@ -722,10 +752,15 @@ export function App() {
                   autoComplete="one-time-code"
                   maxLength={6}
                 />
-                <button type="submit" className="google-primary-btn">
+                <button type="submit" className="google-primary-btn" disabled={authSubmitting}>
                   Подтвердить
                 </button>
-                <button type="button" className="google-outline-btn" onClick={() => void resendVerificationCode()}>
+                <button
+                  type="button"
+                  className="google-outline-btn"
+                  disabled={authSubmitting}
+                  onClick={() => void resendVerificationCode()}
+                >
                   Отправить код повторно
                 </button>
               </form>
@@ -771,8 +806,8 @@ export function App() {
                     />
                   </>
                 )}
-                <button type="submit" className="google-primary-btn">
-                  {authMode === "login" ? "Далее" : "Создать аккаунт"}
+                <button type="submit" className="google-primary-btn" disabled={authSubmitting}>
+                  {authSubmitting ? "Подождите…" : authMode === "login" ? "Далее" : "Создать аккаунт"}
                 </button>
               </form>
             )}

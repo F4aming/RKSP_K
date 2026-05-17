@@ -3,15 +3,6 @@
 Веб-приложение для поиска свободных мест, бронирования и управления парковками.  
 Стек: **React** (Vite), **Fastify**, **Prisma**, **PostgreSQL**.
 
-## Требования
-
-- [Docker Desktop](https://www.docker.com/products/docker-desktop/)
-- [Docker Compose](https://docs.docker.com/compose/) (обычно входит в Docker Desktop)
-- Для локальной разработки без Docker: **Node.js 20+** и **npm**
-
-> PostgreSQL в Docker доступен на хосте по порту **5433** (чтобы не конфликтовать с локальным PostgreSQL на `5432`).
-
----
 
 ## Быстрый старт
 
@@ -140,37 +131,3 @@ npm run test:fuzz
 - **`tests/fuzz-schemas.spec.ts`** — Zod-схемы валидации на случайных данных (`safeParse` не падает).
 - **`tests/fuzz-api.spec.ts`** — HTTP-эндпоинты на случайных телах, query и заголовках; сервер не должен отвечать `500` (Prisma и почта замоканы, БД не требуется).
 
----
-
-## Структура проекта
-
-```
-├── backend/          # Fastify API, Prisma, тесты
-├── frontend/         # React + Vite
-├── docker-compose.yml
-├── package.json      # необязательные npm-алиасы для docker-compose
-└── .env.example      # переменные для SMTP и JWT
-```
-
----
-
-## Полезные команды backend
-
-```bash
-cd backend
-
-npm run build              # сборка TypeScript
-npm run prisma:generate    # генерация Prisma Client
-npm run prisma:migrate     # миграции (dev)
-npm run seed               # тестовые данные
-```
-
----
-
-## Устранение неполадок
-
-**Порт 5433 занят** — остановите другой контейнер или процесс на этом порту.
-
-**Ошибка сборки Docker (timeout к registry)** — проверьте интернет/VPN и повторите `docker-compose up -d --build`.
-
-**Код подтверждения email не приходит** — настройте SMTP в `.env` или смотрите логи: `docker-compose logs backend`.
